@@ -53,7 +53,7 @@ class FigureManagerICat(FigureManagerBase):
 
         with BytesIO() as buf:
             self.canvas.figure.savefig(buf, format='png', facecolor='#888888')
-            icat('--align', 'left', output=False, input=buf.getbuffer())
+            icat(output=False, input=buf.getbuffer())
 
 
 class FigureCanvasICat(FigureCanvasAgg):
