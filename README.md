@@ -1,3 +1,4 @@
+# ONLY WORKS WITH MANUAL SIZING!!!
 # matplotlib-backend-kitty
 
 This python module allows you to use your
@@ -10,7 +11,7 @@ may also be of interest.
 
 To install this one, do one of the following
 
- - `$ pip install --user matplotlib-backend-kitty`
+ - ~~`$ pip install --user matplotlib-backend-kitty`~~
  - clone this repo into your python's `site-packages` directory
  - clone this repo and add the parent directory to `sys.path` or `$PYTHONPATH`
 
