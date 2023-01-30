@@ -10,14 +10,81 @@ from matplotlib import interactive, is_interactive
 from matplotlib._pylab_helpers import Gcf
 from matplotlib.backend_bases import (_Backend, FigureManagerBase)
 from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib.colors import ColorConverter
 
+
+import numpy as np
+
+to_rgba = ColorConverter().to_rgba
 
 # XXX heuristic for interactive repl
 if sys.flags.interactive:
     interactive(True)
 
+# Credit: daleroberts/itermplot
+def revvideo(x):
+    """Try to 'reverse video' the color. Otherwise,
+    return the object unchanged if it can't."""
+
+    def rev(c):
+        if isinstance(c, str):
+            c = to_rgba(c)
+
+        if len(c) == 4:
+            r, g, b, a = c
+            return (1.0 - r, 1.0 - g, 1.0 - b, a)
+        else:
+            r, g, b = c
+            return (1.0 - r, 1.0 - g, 1.0 - b, 1.0)
+
+    try:
+        if isinstance(x, str) and x == "none":
+            return x
+        if isinstance(x, np.ndarray):
+            return np.array([rev(el) for el in x])
+        return rev(x)
+    except (ValueError, KeyError) as e:
+        print("bad", x, e)
+        return x
 
 class FigureManagerICat(FigureManagerBase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.reversed = False
+
+    def reverse(self):
+        if self.reversed: 
+            return
+
+        def modify(c):
+            fcset = False
+
+            try:
+                ec = obj.get_edgecolor()
+                obj.set_edgecolor(revvideo(ec))
+            except AttributeError as e:
+                pass
+
+            try:
+                fc = obj.get_facecolor()
+                obj.set_facecolor(revvideo(fc))
+                fcset = True
+            except AttributeError as e:
+                pass
+
+            try:
+                if not fcset:
+                    c = obj.get_color()
+                    obj.set_color(revvideo(c))
+            except AttributeError as e:
+                pass 
+
+        seen = set()
+        for obj in self.canvas.figure.findobj():
+            if not obj in seen:
+                modify(obj)
+            seen.add(obj)
+        self.reversed = True
 
     @classmethod
     def _run(cls, *cmd):
@@ -52,7 +119,8 @@ class FigureManagerICat(FigureManagerBase):
             self.canvas.figure.set_size_inches((px[0] / dpi, px[1] / dpi))
 
         with BytesIO() as buf:
-            self.canvas.figure.savefig(buf, format='png', facecolor='#888888')
+            self.reverse()
+            self.canvas.figure.savefig(buf, format='png', transparent=True)
             icat(output=False, input=buf.getbuffer())
 
 

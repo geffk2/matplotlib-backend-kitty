@@ -10,5 +10,6 @@ setup(
     packages=find_packages(where=".", exclude=["tests"]),
     install_requires=[
         "matplotlib",
+        "numpy",
     ],
 )
